@@ -4,6 +4,6 @@ const app = express()
 app.get("/",(req, res)=>{
     res.send("App is running")
 })
-app.listen("3000",()=>{
+app.listen(3000,()=>{
     console.log("App is running at 3000")
 })
