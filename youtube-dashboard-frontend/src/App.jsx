@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import "./App.css";
 import { Videodetails } from "../components/Videodetails";
 
-console.log("ALL ENV VARS", import.meta.env);
 function App() {
   return (
     <>

@@ -6,23 +6,24 @@ const { google } = require("googleapis");
 
 dotenv.config();
 const app = express();
-app.use(cors({
+app.use(
+  cors({
     origin: "http://localhost:5173",
     credentials: true, // 👈 allow cookies to pass through
-  }));
+  })
+);
 
 // Middleware
 
 app.use(express.json());
 // Session setup
-app.use(session({
+app.use(
+  session({
     secret: "your-secret-key",
     resave: false,
     saveUninitialized: true,
-  }));
-
-
-
+  })
+);
 
 // Google OAuth2 client
 const oauth2Client = new google.auth.OAuth2(
@@ -34,7 +35,7 @@ const oauth2Client = new google.auth.OAuth2(
 // Step 1: Redirect user to Google for authentication
 app.get("/auth/google", (req, res) => {
   const scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"];
-  
+
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline", // to get refresh token
     scope: scopes,
@@ -123,11 +124,40 @@ app.post("/comments", async (req, res) => {
 
     res.json(response.data);
   } catch (error) {
-    console.error("❌ Error posting comment:", error.response?.data || error.message);
+    console.error(
+      "❌ Error posting comment:",
+      error.response?.data || error.message
+    );
     res.status(500).send("Failed to post comment");
   }
 });
-
+//Reply
+app.post("/reply", async (req, res) => {
+  const { commentId, replyText } = req.body;
+  if (!req.session.tokens) {
+    return res.status(401).send("You need to log in first");
+  }
+  oauth2Client.setCredentials(req.session.tokens);
+  try {
+    const youtube = google.youtube({
+      version: "v3",
+      auth: oauth2Client,
+    });
+    const response = await youtube.comments.insert({
+      part: "snippet",
+      requestBody: {
+        snippet: {
+          parentId: commentId,
+          textOriginal: replyText,
+        },
+      },
+    });
+    res.json(response.data);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Failed to reply");
+  }
+});
 // Root
 app.get("/", (req, res) => {
   res.send("App is running");
