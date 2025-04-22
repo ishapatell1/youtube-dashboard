@@ -1,4 +1,5 @@
 import React, {  useEffect, useState } from 'react'
+import { Commentbox } from './Comments/Commentbox';
 
 export const Videodetails = () => {
     const [videoData, setVideoData]= useState(null)
@@ -25,6 +26,9 @@ export const Videodetails = () => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return date.toLocaleDateString(undefined, options);
   };
+  const handleCommentSubmit = (text)=>{
+console.log("here")
+  }
   return (
     // <div>
     //     <h2>{videoData.snippet.title}</h2>
@@ -42,6 +46,7 @@ export const Videodetails = () => {
     <p className="video-stats">
       <strong>Published on :</strong>{formatDate(videoData.snippet.publishedAt)}
     </p>
+    <Commentbox onSubmit={handleCommentSubmit}/>
   </div>
   )
 }
