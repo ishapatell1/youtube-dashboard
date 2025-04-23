@@ -4,14 +4,15 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const session = require("express-session");
 const { google } = require("googleapis");
-const Note = require("./src/models/Note"); // 👈 Import the Note model
+const Note = require("./src/models/Note"); 
+const logger = require("./src/models/EventLogs")
 
 dotenv.config();
 const app = express();
 app.use(
   cors({
     origin: "http://localhost:5173",
-    credentials: true, // 👈 allow cookies to pass through
+    credentials: true, 
   })
 );
 
@@ -39,9 +40,9 @@ app.get("/auth/google", (req, res) => {
   const scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"];
 
   const authUrl = oauth2Client.generateAuthUrl({
-    access_type: "offline", // to get refresh token
+    access_type: "offline", 
     scope: scopes,
-    prompt: "consent", // force permission screen
+    prompt: "consent", 
   });
 
   res.redirect(authUrl);
@@ -56,11 +57,11 @@ app.get("/auth/google/callback", async (req, res) => {
     oauth2Client.setCredentials(tokens);
 
     req.session.tokens = tokens; // Save in session
-    console.log("✅ Tokens saved:", tokens);
+    logger.log("✅ Tokens saved:", tokens);
 
     res.send("You are logged in and ready to use YouTube!");
   } catch (err) {
-    console.error("❌ Error getting tokens:", err);
+    logger.error("❌ Error getting tokens:", err);
     res.status(500).send("Login failed");
   }
 });
@@ -89,7 +90,7 @@ app.get("/comments", async (req, res) => {
 
     res.json(response.data.items);
   } catch (error) {
-    console.error("❌ Error fetching comments:", error);
+    logger.error("❌ Error fetching comments:", error);
     res.status(500).send("Failed to fetch comments");
   }
 });
@@ -123,10 +124,11 @@ app.post("/comments", async (req, res) => {
         },
       },
     });
-
+    logger.info(`Fetched comments for video: ${videoId}`);
     res.json(response.data);
   } catch (error) {
-    console.error(
+    logger.error("Error fetching comments: " + error.message);
+    logger.error(
       "❌ Error posting comment:",
       error.response?.data || error.message
     );
@@ -156,7 +158,7 @@ app.post("/reply", async (req, res) => {
     });
     res.json(response.data);
   } catch (err) {
-    console.log(err);
+    logger.log(err);
     res.status(500).send("Failed to reply");
   }
 });
@@ -180,7 +182,7 @@ app.put("/video", async (req, res) => {
     });
     res.json(response.data);
   } catch (error) {
-    console.error(error.message);
+    logger.error(error.message);
   }
 });
 // Delete a comment
@@ -202,7 +204,7 @@ app.delete("/comments/:commentId", async (req, res) => {
 
     res.send("✅ Comment deleted");
   } catch (error) {
-    console.error("❌ Error deleting comment:", error.message);
+    logger.error("❌ Error deleting comment:", error.message);
     res.status(500).send("Failed to delete comment");
   }
 });
@@ -220,7 +222,7 @@ app.post("/notes", async (req, res) => {
     await note.save();
     res.status(201).json(note);
   } catch (error) {
-    console.error("❌ Error saving note:", error.message);
+    logger.error("❌ Error saving note:", error.message);
     res.status(500).send("Failed to save note");
   }
 });
@@ -233,7 +235,7 @@ app.get("/notes/:videoId", async (req, res) => {
     const notes = await Note.find({ videoId }).sort({ createdAt: -1 });
     res.json(notes);
   } catch (error) {
-    console.error("❌ Error fetching notes:", error.message);
+    logger.error("Error fetching notes: " + error.message); 
     res.status(500).send("Failed to fetch notes");
   }
 });
@@ -244,19 +246,19 @@ app.get("/", (req, res) => {
 
 // Server
 // app.listen(3000, () => {
-//   console.log("🚀 App is running at http://localhost:3000");
+//   logger.log("🚀 App is running at http://localhost:3000");
 // });
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("✅ MongoDB connected");
+    logger.info("MongoDB connected successfully"); 
 
     // Start Express server *after* successful DB connection
     app.listen(3000, () => {
-      console.log("🚀 Server running on http://localhost:3000");
+        logger.info("Server running on http://localhost:3000")
     });
   })
   .catch((err) => {
-    console.error("❌ MongoDB connection error:", err.message);
+    logger.error("MongoDB connection error: " + err.message);
     process.exit(1); // Stop the app if DB connection fails
   });
