@@ -3,3 +3,9 @@
 [2025-04-23T09:49:14.887Z] info: Server running on http://localhost:3000
 [2025-04-23T09:51:13.177Z] info: MongoDB connected successfully
 [2025-04-23T09:51:13.182Z] info: Server running on http://localhost:3000
+[2025-04-23T10:46:34.947Z] error: ❌ Error fetching comments: The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter could not be found.
+[2025-04-23T10:46:35.089Z] error: ❌ Error fetching comments: The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter could not be found.
+[2025-04-23T10:46:54.465Z] error: ❌ Error fetching comments: The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter could not be found.
+[2025-04-23T10:46:54.634Z] error: ❌ Error fetching comments: The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter could not be found.
+[2025-04-23T10:47:46.935Z] info: MongoDB connected successfully
+[2025-04-23T10:47:46.940Z] info: Server running on http://localhost:3000
