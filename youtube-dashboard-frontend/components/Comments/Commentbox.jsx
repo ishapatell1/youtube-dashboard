@@ -10,9 +10,12 @@ export const Commentbox = () => {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/comments?videoId=${VIDEO_ID}`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `http://localhost:3000/comments?videoId=${VIDEO_ID}`,
+          {
+            credentials: "include",
+          }
+        );
         const data = await res.json();
 
         const formatted = data.map((item) => ({
@@ -124,6 +127,30 @@ export const Commentbox = () => {
     setReplyingTo(commentId);
   };
 
+  const handleDelete = async (commentId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this comment?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/comments/${commentId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        setComments(comments.filter((comment) => comment.id !== commentId));
+        alert("🗑️ Comment deleted!");
+      } else {
+        alert("❌ Failed to delete comment");
+      }
+    } catch (err) {
+      console.error("❌ Error deleting comment:", err.message);
+      alert("❌ Something went wrong");
+    }
+  };
+
   return (
     <div className="comment-box">
       <form onSubmit={handleSubmit}>
@@ -149,12 +176,17 @@ export const Commentbox = () => {
                 className="reply"
                 style={{ marginLeft: "1rem", color: "#666" }}
               >
-                ↪️{" "}
-                <span dangerouslySetInnerHTML={{ __html: reply.text }} />
+                ↪️ <span dangerouslySetInnerHTML={{ __html: reply.text }} />
               </div>
             ))}
 
             <button onClick={() => handleReplyClick(ele.id)}>Reply</button>
+            <button
+              onClick={() => handleDelete(ele.id)}
+              style={{ marginLeft: "1rem", color: "red" }}
+            >
+              Delete
+            </button>
 
             {replyingTo === ele.id && (
               <form onSubmit={(e) => handleReply(e, ele.id)}>

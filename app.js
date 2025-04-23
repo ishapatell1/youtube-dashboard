@@ -180,6 +180,29 @@ app.put("/video", async (req, res)=>{
         console.error(error.message)
     }
 })
+// Delete a comment
+app.delete("/comments/:commentId", async (req, res) => {
+    const { commentId } = req.params;
+    if (!req.session.tokens) {
+      return res.status(401).send("You need to log in first");
+    }
+  
+    oauth2Client.setCredentials(req.session.tokens);
+  
+    try {
+      const youtube = google.youtube({
+        version: "v3",
+        auth: oauth2Client,
+      });
+  
+      await youtube.comments.delete({ id: commentId });
+  
+      res.send("✅ Comment deleted");
+    } catch (error) {
+      console.error("❌ Error deleting comment:", error.message);
+      res.status(500).send("Failed to delete comment");
+    }
+  });
 // Root
 app.get("/", (req, res) => {
   res.send("App is running");
