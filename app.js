@@ -1,8 +1,10 @@
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const session = require("express-session");
 const { google } = require("googleapis");
+const Note = require("./src/models/Note"); // 👈 Import the Note model
 
 dotenv.config();
 const app = express();
@@ -158,57 +160,103 @@ app.post("/reply", async (req, res) => {
     res.status(500).send("Failed to reply");
   }
 });
-//fetch video details 
-app.put("/video", async (req, res)=>{
-    const {videoId, title, description} = req.body; 
-    if(!req.session.tokens) return res.status(401).send("Login Required")
-        oauth2Client.setCredentials(req.session.tokens)
-    const youtube = google.youtube({version:"v3",auth:oauth2Client})
-    try{
-        const response = await youtube.videos.update({
-            part:"snippet",
-            requestBody: {
-                id:videoId, 
-                snippet:{
-                    title,description, categoryId:"22"
-                }
-            }
-        });
-        res.json(response.data)
-
-    }catch(error){
-        console.error(error.message)
-    }
-})
+//fetch video details
+app.put("/video", async (req, res) => {
+  const { videoId, title, description } = req.body;
+  if (!req.session.tokens) return res.status(401).send("Login Required");
+  oauth2Client.setCredentials(req.session.tokens);
+  const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+  try {
+    const response = await youtube.videos.update({
+      part: "snippet",
+      requestBody: {
+        id: videoId,
+        snippet: {
+          title,
+          description,
+          categoryId: "22",
+        },
+      },
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error(error.message);
+  }
+});
 // Delete a comment
 app.delete("/comments/:commentId", async (req, res) => {
-    const { commentId } = req.params;
-    if (!req.session.tokens) {
-      return res.status(401).send("You need to log in first");
-    }
-  
-    oauth2Client.setCredentials(req.session.tokens);
-  
-    try {
-      const youtube = google.youtube({
-        version: "v3",
-        auth: oauth2Client,
-      });
-  
-      await youtube.comments.delete({ id: commentId });
-  
-      res.send("✅ Comment deleted");
-    } catch (error) {
-      console.error("❌ Error deleting comment:", error.message);
-      res.status(500).send("Failed to delete comment");
-    }
-  });
+  const { commentId } = req.params;
+  if (!req.session.tokens) {
+    return res.status(401).send("You need to log in first");
+  }
+
+  oauth2Client.setCredentials(req.session.tokens);
+
+  try {
+    const youtube = google.youtube({
+      version: "v3",
+      auth: oauth2Client,
+    });
+
+    await youtube.comments.delete({ id: commentId });
+
+    res.send("✅ Comment deleted");
+  } catch (error) {
+    console.error("❌ Error deleting comment:", error.message);
+    res.status(500).send("Failed to delete comment");
+  }
+});
+
+// POST /notes → Save a note for a video
+app.post("/notes", async (req, res) => {
+  const { videoId, text } = req.body;
+
+  if (!videoId || !text) {
+    return res.status(400).send("videoId and text are required");
+  }
+
+  try {
+    const note = new Note({ videoId, text });
+    await note.save();
+    res.status(201).json(note);
+  } catch (error) {
+    console.error("❌ Error saving note:", error.message);
+    res.status(500).send("Failed to save note");
+  }
+});
+
+// GET /notes/:videoId → Get all notes for a video
+app.get("/notes/:videoId", async (req, res) => {
+  const { videoId } = req.params;
+
+  try {
+    const notes = await Note.find({ videoId }).sort({ createdAt: -1 });
+    res.json(notes);
+  } catch (error) {
+    console.error("❌ Error fetching notes:", error.message);
+    res.status(500).send("Failed to fetch notes");
+  }
+});
 // Root
 app.get("/", (req, res) => {
   res.send("App is running");
 });
 
 // Server
-app.listen(3000, () => {
-  console.log("🚀 App is running at http://localhost:3000");
-});
+// app.listen(3000, () => {
+//   console.log("🚀 App is running at http://localhost:3000");
+// });
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB connected");
+
+    // Start Express server *after* successful DB connection
+    app.listen(3000, () => {
+      console.log("🚀 Server running on http://localhost:3000");
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err.message);
+    process.exit(1); // Stop the app if DB connection fails
+  });

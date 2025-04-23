@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Commentbox } from './Comments/Commentbox';
+import { NoteSection } from './Comments/Notes';
 
 export const Videodetails = () => {
   const [videoData, setVideoData] = useState(null);
@@ -147,7 +148,7 @@ export const Videodetails = () => {
                   {status}
                 </p>
               )}
-
+              <NoteSection videoId={videoId}/>
               <Commentbox videoId={videoId} />
 
               <button
