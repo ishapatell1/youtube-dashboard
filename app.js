@@ -158,6 +158,28 @@ app.post("/reply", async (req, res) => {
     res.status(500).send("Failed to reply");
   }
 });
+//fetch video details 
+app.put("/video", async (req, res)=>{
+    const {videoId, title, description} = req.body; 
+    if(!req.session.tokens) return res.status(401).send("Login Required")
+        oauth2Client.setCredentials(req.session.tokens)
+    const youtube = google.youtube({version:"v3",auth:oauth2Client})
+    try{
+        const response = await youtube.videos.update({
+            part:"snippet",
+            requestBody: {
+                id:videoId, 
+                snippet:{
+                    title,description, categoryId:"22"
+                }
+            }
+        });
+        res.json(response.data)
+
+    }catch(error){
+        console.error(error.message)
+    }
+})
 // Root
 app.get("/", (req, res) => {
   res.send("App is running");
